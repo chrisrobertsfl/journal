@@ -1,0 +1,32 @@
+package com.kohls.journal.service;
+
+import com.chrisrobertsfl.journal.model.*;
+import com.chrisrobertsfl.journal.repository.*;
+import java.util.Arrays
+import java.util.List;
+
+rule "Transformation From DTO -> Entity"
+when
+    $dto: TaskInfo(id == null, state == null)
+    ItemRepository()
+then
+    insert(new Task($dto));
+    retract($dto);
+end
+
+rule "Create and save Task"
+when
+    $repository: ItemRepository()
+    $task: Task(id == null, state == null)
+then
+    insert($repository.save(new Task($task.id(), $task.name(), $task.description(), State.NOT_STARTED, $task.labels())));
+    retract($task);
+end
+
+rule "Transformation From Entity -> DTO"
+when
+    $task: Task(id != null)
+then
+    insert(new TaskInfo($task));
+    retract($task);
+end

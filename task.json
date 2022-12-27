@@ -1,0 +1,5 @@
+{
+  "name": "My Task",
+  "description": "My task description",
+  "labels": [ "label1", "label2", "label3" ]
+}
