@@ -10,7 +10,7 @@ public interface TaskService {
     List<TaskInfo> findAll();
     TaskInfo addTask(TaskInfo task);
     TaskInfo updateTask(TaskInfo task);
-    void deleteTask(String id);
+    TaskInfo deleteTask(String id);
     Optional<TaskInfo> findById(String id);
     List<TaskInfo> findByLabel(Set<String> labels);
     List<TaskInfo> findByStatus(String status);

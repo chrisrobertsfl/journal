@@ -19,6 +19,7 @@ import static com.chrisrobertsfl.journal.task.model.Priority.HIGH;
 import static com.chrisrobertsfl.journal.task.model.Priority.LOW;
 import static com.chrisrobertsfl.journal.task.model.Status.*;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,13 +91,15 @@ public class TaskServiceImplTest {
         @DisplayName("saves the task")
         void savesTask() {
             when(taskRepository.save(taskInfo.toTask())).thenReturn(taskInfo.toTask());
-            assertEquals(taskInfo, taskService.addTask(taskInfo));
+            assertEquals(taskInfo, taskService.addTask(taskInfo), "Task was not saved correctly");
         }
 
         @Test
         @DisplayName("throws exception when task is missing")
         void throwsExceptionWhenTaskIsMissing() {
-            assertThrows(MissingTaskException.class, () -> taskService.addTask(null), "Expected MissingTaskException to be thrown when adding a null task");
+            assertThatExceptionOfType(MissingTaskException.class)
+                    .isThrownBy(() -> taskService.addTask(null))
+                    .withMessage("Task ID cannot be null");
         }
     }
 
@@ -120,7 +123,7 @@ public class TaskServiceImplTest {
         void updatesTask() {
             when(taskRepository.findById(taskId)).thenReturn(Optional.of(taskInfo.toTask()));
             when(taskRepository.save(taskInfo.toTask())).thenReturn(taskInfo.toTask());
-            assertEquals(taskInfo, taskService.updateTask(taskInfo));
+            assertEquals(taskInfo, taskService.updateTask(taskInfo), "Task was not updated correctly");
         }
 
         @Test
@@ -143,16 +146,22 @@ public class TaskServiceImplTest {
         }
 
         @Test
-        @DisplayName("throws exception when id is null")
-        void deletesTask() {
+        @DisplayName("deletes a task")
+        void deleteTask() {
             when(taskRepository.findById(taskId)).thenReturn(Optional.of(taskInfo.toTask()));
-            assertDoesNotThrow(() -> taskService.deleteTask(taskId), "Expected no exception to be thrown when deleting a task with a valid id");
+            TaskInfo deleted = taskService.deleteTask(taskId);
+            assertAll(
+                    () -> assertDoesNotThrow(() -> deleted, "Expected no exception to be thrown when deleting a task with a valid id"),
+                    () -> assertEquals(taskInfo, deleted));
+
         }
 
         @Test
         @DisplayName("throws exception when id is null")
         void throwsExceptionWhenTaskIsMissing() {
-            assertThrows(MissingTaskException.class, () -> taskService.deleteTask(null));
+            assertThatExceptionOfType(MissingTaskException.class)
+                    .isThrownBy(() -> taskService.deleteTask(null))
+                    .withMessage("Task ID cannot be null");
         }
 
         @Test
@@ -274,7 +283,7 @@ public class TaskServiceImplTest {
             when(taskRepository.findById(taskId)).thenReturn(Optional.of(task.toTask()));
             Task marked = new Task(task.id(), task.name(), task.description(), task.createdAt(), task.priority(), IN_PROGRESS, task.labels(), List.of());
             when(taskRepository.save(marked)).thenReturn(marked);
-            assertEquals(IN_PROGRESS, taskService.markInProgress(taskId).status());
+            assertEquals(IN_PROGRESS, taskService.markInProgress(taskId).status(), "Expected task status to be IN_PROGRESS");
         }
 
         @Test
@@ -302,7 +311,7 @@ public class TaskServiceImplTest {
                 when(taskRepository.findById(taskId)).thenReturn(Optional.of(task.toTask()));
                 Task marked = new Task(task.id(), task.name(), task.description(), task.createdAt(), task.priority(), COMPLETED, task.labels(), List.of());
                 when(taskRepository.save(marked)).thenReturn(marked);
-                assertEquals(COMPLETED, taskService.markComplete(taskId).status());
+                assertEquals(COMPLETED, taskService.markComplete(taskId).status(), "Task status should have been COMPLETED");
             }
 
             @Test

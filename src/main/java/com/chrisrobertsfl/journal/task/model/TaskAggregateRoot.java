@@ -35,10 +35,11 @@ public class TaskAggregateRoot {
                 .orElseThrow(() -> new TaskNotFoundException(format("Task with ID '%s' not found", task.id())));
     }
 
-    public void deleteTask(String id) {
-        findById(id)
+    public Task deleteTask(String id) {
+        Task deleted = findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(format("No Task found for id %s", id)));
-        taskRepository.deleteById(id);
+        taskRepository.deleteById(deleted.id());
+        return deleted;
     }
 
     public Optional<Task> findById(String id) {

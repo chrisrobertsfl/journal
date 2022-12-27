@@ -37,7 +37,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskInfo addTask(TaskInfo taskInfo) {
         Task task = ofNullable(taskInfo)
                 .map(TaskInfo::toTask)
-                .orElseThrow(() -> new MissingTaskException("Task must be present when adding it"));
+                .orElseThrow(() -> new MissingTaskException("Task ID cannot be null"));
         return taskAggregateRoot.addTask(task).toTaskInfo();
     }
 
@@ -47,9 +47,10 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTask(String id) {
-        taskAggregateRoot.deleteTask(ofNullable(id)
-                .orElseThrow(() -> new MissingTaskException("Task id must be present")));
+    public TaskInfo deleteTask(String id) {
+        return taskAggregateRoot.deleteTask(ofNullable(id)
+                .orElseThrow(() -> new MissingTaskException("Task ID cannot be null")))
+                .toTaskInfo();
     }
 
     @Override
