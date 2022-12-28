@@ -1,13 +1,9 @@
 package com.chrisrobertsfl.journal.task.controller;
 
-import com.chrisrobertsfl.journal.task.model.TaskInfo;
-import com.chrisrobertsfl.journal.task.model.TaskResponse;
+import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -23,11 +19,24 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<TaskResponse> addTask(@RequestBody TaskInfo task) {
-        return Optional.of(task)
-                .map(taskService::addTask)
-                .map(TaskResponse::success)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.badRequest().body(TaskResponse.error("Error adding task")));
+        try {
+            return ResponseEntity.ok(TaskResponse.success(taskService.addTask(task)));
+        } catch (TaskException e) {
+            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        } catch(Exception e) {
+            return ResponseEntity.internalServerError().body(TaskResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping
+    public ResponseEntity<TaskResponse> updateTask(@RequestBody TaskInfo task) {
+        try {
+            return ResponseEntity.ok(TaskResponse.success(taskService.updateTask(task)));
+        } catch (TaskException e) {
+            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        } catch(Exception e) {
+            return ResponseEntity.internalServerError().body(TaskResponse.error(e.getMessage()));
+        }
     }
 
 }
