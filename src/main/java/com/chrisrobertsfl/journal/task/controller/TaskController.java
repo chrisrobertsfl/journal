@@ -39,4 +39,11 @@ public class TaskController {
         }
     }
 
+    public ResponseEntity<TaskResponse> deleteTask(@RequestBody String id) {
+        try {
+            return ResponseEntity.ok(TaskResponse.success(taskService.deleteTask(id)));
+        } catch(TaskException e) {
+            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        }
+    }
 }

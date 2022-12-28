@@ -2,6 +2,7 @@ package com.chrisrobertsfl.journal.task.controller;
 
 import com.chrisrobertsfl.journal.task.model.MissingTaskException;
 import com.chrisrobertsfl.journal.task.model.TaskInfo;
+import com.chrisrobertsfl.journal.task.model.TaskNotFoundException;
 import com.chrisrobertsfl.journal.task.model.TaskResponse;
 import com.chrisrobertsfl.journal.task.repository.TaskRepository;
 import com.chrisrobertsfl.journal.task.service.TaskService;
@@ -110,5 +111,44 @@ class TaskControllerTest {
             );
         }
 
+    }
+
+    @Nested
+    @DisplayName("when deleting a task")
+    class DeleteTask {
+
+        @Test
+        @DisplayName("task is successfully deleted")
+        void deleteTask() {
+            TaskInfo task = new TaskInfo("1", null, null, null, null, null, null, null);
+            ResponseEntity<TaskResponse> response = taskController.deleteTask(task.id());
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code")
+            );
+        }
+
+        @Test
+        @DisplayName("id is null")
+        void deleteTaskWithIdNull() {
+            when(taskService.deleteTask(null)).thenThrow(new MissingTaskException("Task ID cannot be null"));
+            ResponseEntity<TaskResponse> response = taskController.deleteTask(null);
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task ID cannot be null", response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+        @Test
+        @DisplayName("task is not found")
+
+        //"Task with ID '1' not found"
+        void deleteTaskWithTaskNotFound() {
+            when(taskService.deleteTask("1")).thenThrow(new TaskNotFoundException("Task with ID '1' not found"));
+            ResponseEntity<TaskResponse> response = taskController.deleteTask("1");
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
+            );
+        }
     }
 }
