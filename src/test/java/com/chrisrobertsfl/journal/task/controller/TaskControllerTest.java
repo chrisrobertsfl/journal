@@ -316,5 +316,42 @@ class TaskControllerTest {
             );
         }
 
+        @Nested
+        @DisplayName("when marking a task as complete")
+        class MarkComplete {
+            @Test
+            @DisplayName("should return a 200 response with the updated task")
+            void returns200WithUpdatedTask() {
+                TaskInfo task = new TaskInfo("1", "Task 1", "Description", null, null, null, null, null);
+                when(taskService.markComplete(task.id())).thenReturn(task);
+                ResponseEntity<TaskResponse> response = taskController.markComplete(task.id());
+                assertAll(
+                        () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code"),
+                        () -> assertEquals(task, response.getBody().task(), "Incorrect task in response body")
+                );
+            }
+
+            @Test
+            @DisplayName("should return a 404 response if task is not found")
+            void returns404WhenTaskIsNotFound() {
+                when(taskService.markComplete("1")).thenThrow(new TaskNotFoundException("Task not found"));
+                ResponseEntity<TaskResponse> response = taskController.markComplete("1");
+                assertAll(
+                        () -> assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode(), "Incorrect status code"),
+                        () -> assertEquals("Task not found", response.getBody().error(), "Incorrect error message")
+                );
+            }
+
+            @Test
+            @DisplayName("should return a 400 response if task id is null")
+            void returns400WhenIdIsNull() {
+                when(taskService.markComplete(null)).thenThrow(new TaskException("Task ID cannot be null"));
+                ResponseEntity<TaskResponse> response = taskController.markComplete(null);
+                assertAll(
+                        () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                        () -> assertEquals("Task ID cannot be null", response.getBody().error(), "Incorrect error message")
+                );
+            }
+        }
     }
 }
