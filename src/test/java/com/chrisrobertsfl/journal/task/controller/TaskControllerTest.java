@@ -227,4 +227,94 @@ class TaskControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("when finding tasks by status")
+    class FindByStatus {
+        @Test
+        @DisplayName("tasks are found by status")
+        void findByStatus() {
+            // arrange
+            List<TaskInfo> taskList = List.of(
+                    new TaskInfo("1", "Task 1", "Description", Instant.now(), HIGH, PENDING, Set.of("label 1"), List.of()),
+                    new TaskInfo("2", "Task 2", "Description", Instant.now(), HIGH, PENDING, Set.of("label 2"), List.of())
+            );
+            String status = PENDING.toString();
+            when(taskService.findByStatus(status)).thenReturn(taskList);
+            TaskController taskController = new TaskController(taskService);
+
+            // act
+            ResponseEntity<TaskListResponse> response = taskController.findByStatus(status);
+
+            // assert
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals(taskList, response.getBody().tasks(), "Incorrect list of tasks")
+            );
+        }
+
+        @Test
+        @DisplayName("tasks are not found by status")
+        void findByStatusNotFound() {
+            // arrange
+            String status = PENDING.toString();
+            when(taskService.findByStatus(status)).thenReturn(List.of());
+            // act
+            ResponseEntity<TaskListResponse> response = taskController.findByStatus(status);
+
+            // assert
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("No tasks found with status: " + status, response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+        @Test
+        @DisplayName("null or empty status query returns bad request")
+        void findByStatusBadRequest() {
+            ResponseEntity<TaskListResponse> response = taskController.findByStatus("");
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("No status provided", response.getBody().error(), "Incorrect error message")
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("when marking a task as in progress")
+    class MarkInProgress {
+        @Test
+        @DisplayName("should return a task response with the updated task")
+        void returnsTaskResponse() {
+            TaskInfo task = new TaskInfo("1", "Task 1", "Description", null, null, null, null, null);
+            when(taskService.markInProgress(task.id())).thenReturn(task);
+            ResponseEntity<TaskResponse> response = taskController.markInProgress(task.id());
+            assertAll(
+                    () -> assertNotNull(response.getBody().task(), "Task response body should not be null"),
+                    () -> assertEquals(task, response.getBody().task(), "Incorrect task in response body")
+            );
+        }
+
+        @Test
+        @DisplayName("should return a 404 response if task is not found")
+        void returns404WhenTaskNotFound() {
+            when(taskService.markInProgress("invalid-id")).thenThrow(new TaskNotFoundException("Task not found"));
+            ResponseEntity<TaskResponse> response = taskController.markInProgress("invalid-id");
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task not found", response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+        @Test
+        @DisplayName("should return a 400 response if task id is null")
+        void returns400WhenIdIsNull() {
+            when(taskService.markInProgress(null)).thenThrow(new TaskException("Task ID cannot be null"));
+            ResponseEntity<TaskResponse> response = taskController.markInProgress(null);
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task ID cannot be null", response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+    }
 }

@@ -2,6 +2,7 @@ package com.chrisrobertsfl.journal.task.controller;
 
 import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
+import com.google.common.base.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,7 @@ public class TaskController {
         }
     }
 
+    @DeleteMapping("/{id}")
     public ResponseEntity<TaskResponse> deleteTask(@RequestBody String id) {
         try {
             return ResponseEntity.ok(TaskResponse.success(taskService.deleteTask(id)));
@@ -55,8 +57,8 @@ public class TaskController {
         }
     }
 
-    public ResponseEntity<TaskResponse> findById(String id) {
-        try {
+    @GetMapping("/{id}")
+    public ResponseEntity<TaskResponse> findById(@PathVariable String id) {        try {
             Optional<TaskInfo> found = taskService.findById(id);
             return ResponseEntity.ok(TaskResponse.success(found.get()));
         } catch (TaskException e) {
@@ -64,7 +66,8 @@ public class TaskController {
         }
     }
 
-    public ResponseEntity<TaskListResponse> findByLabel(Set<String> labels) {
+    @GetMapping("/label")
+    public ResponseEntity<TaskListResponse> findByLabel(@RequestParam Set<String> labels) {
         if (isNull(labels) || labels.isEmpty()) {
             return ResponseEntity.badRequest().body(TaskListResponse.error("No labels provided"));
         }
@@ -72,5 +75,29 @@ public class TaskController {
         return byLabel.isEmpty()
                 ? ResponseEntity.status(404).body(TaskListResponse.error(format("No tasks found for label(s):  %s", new TreeSet<>(labels))))
                 : ResponseEntity.ok(TaskListResponse.success(byLabel));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<TaskListResponse> findByStatus(@PathVariable String status) {
+        if (Strings.isNullOrEmpty(status)) {
+            return ResponseEntity.badRequest().body(TaskListResponse.error("No status provided"));
+        }
+        List<TaskInfo> byStatus = taskService.findByStatus(status);
+        return byStatus.isEmpty()
+                ? ResponseEntity.status(404).body(TaskListResponse.error(format("No tasks found with status: %s", status)))
+                : ResponseEntity.ok(TaskListResponse.success(byStatus));
+    }
+
+    @PutMapping("/{id}/mark-in-progress")
+    public ResponseEntity<TaskResponse> markInProgress(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(TaskResponse.success(taskService.markInProgress(id)));
+        } catch (TaskNotFoundException e) {
+            return ResponseEntity.status(404).body(TaskResponse.error(e.getMessage()));
+        } catch (TaskException e) {
+            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(TaskResponse.error(e.getMessage()));
+        }
     }
 }
