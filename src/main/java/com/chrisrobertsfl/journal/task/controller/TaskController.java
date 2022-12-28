@@ -46,4 +46,13 @@ public class TaskController {
             return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
         }
     }
+
+    public ResponseEntity<TaskResponse> findById(String id) {
+        try {
+            Optional<TaskInfo> found = taskService.findById(id);
+            return ResponseEntity.ok(TaskResponse.success(found.get()));
+        } catch(TaskException e) {
+            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        }
+    }
 }

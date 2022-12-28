@@ -140,8 +140,6 @@ class TaskControllerTest {
 
         @Test
         @DisplayName("task is not found")
-
-        //"Task with ID '1' not found"
         void deleteTaskWithTaskNotFound() {
             when(taskService.deleteTask("1")).thenThrow(new TaskNotFoundException("Task with ID '1' not found"));
             ResponseEntity<TaskResponse> response = taskController.deleteTask("1");
@@ -150,5 +148,45 @@ class TaskControllerTest {
                     () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
             );
         }
+    }
+
+    @Nested
+    @DisplayName("when finding a task by id")
+    class FindById {
+
+        @Test
+        @DisplayName("task is found")
+        void findById() {
+            TaskInfo task = new TaskInfo("1", null, null, null, null, null, null, null);
+            when(taskService.findById("1")).thenReturn(Optional.of(task));
+            ResponseEntity<TaskResponse> response = taskController.findById("1");
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code")
+            );
+        }
+
+        @Test
+        @DisplayName("task id is null")
+        void findTaskWithIdNull() {
+            when(taskService.findById(null)).thenThrow(new MissingTaskException("Task ID cannot be null"));
+            ResponseEntity<TaskResponse> response = taskController.findById(null);
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task ID cannot be null", response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+        @Test
+        @DisplayName("task is not found")
+        void findTaskWithTaskNotFound() {
+            when(taskService.findById("1")).thenThrow(new TaskNotFoundException("Task with ID '1' not found"));
+            ResponseEntity<TaskResponse> response = taskController.findById("1");
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
+            );
+        }
+
+
     }
 }
