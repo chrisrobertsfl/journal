@@ -3,6 +3,7 @@ package com.chrisrobertsfl.journal.task.controller;
 import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
 import com.google.common.base.Strings;
+import jakarta.annotation.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +16,9 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("/api/tasks")
 public class TaskController {
-
+    @Resource(name = "taskService")
     private final TaskService taskService;
 
     public TaskController(TaskService taskService) {
@@ -55,6 +56,14 @@ public class TaskController {
         } catch (TaskException e) {
             return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<TaskListResponse> findAll() {
+        List<TaskInfo> allTasks = taskService.findAll();
+        return allTasks.isEmpty()
+                ? ResponseEntity.status(404).body(TaskListResponse.error("No tasks found"))
+                : ResponseEntity.ok(TaskListResponse.success(allTasks));
     }
 
     @GetMapping("/{id}")

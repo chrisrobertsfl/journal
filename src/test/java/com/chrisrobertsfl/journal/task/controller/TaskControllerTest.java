@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 import static com.chrisrobertsfl.journal.task.model.Priority.HIGH;
 import static com.chrisrobertsfl.journal.task.model.Status.PENDING;
 import static com.chrisrobertsfl.journal.task.model.TaskInfo.nullTaskInfo;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -59,7 +57,7 @@ class TaskControllerTest {
             ResponseEntity<TaskResponse> response = taskController.addTask(task);
 
             assertAll(
-                    () -> assertEquals(HttpStatusCode.valueOf(201),  response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals(HttpStatusCode.valueOf(201), response.getStatusCode(), "Incorrect status code"),
                     () -> assertNotNull(response.getBody().task(), "Task response body should not be null"),
                     () -> assertEquals(task, response.getBody().task(), "Incorrect task in response body")
             );
@@ -140,6 +138,26 @@ class TaskControllerTest {
             assertAll(
                     () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
                     () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("when finding all tasks")
+    class FindAllTasks {
+        @Test
+        @DisplayName("should return a list of all tasks")
+        void returnsListOfTasks() {
+            List<TaskInfo> tasks = List.of(
+                    new TaskInfo("1", "Task 1", "Description", Instant.now(), Priority.HIGH, Status.PENDING, Set.of("label1", "label2"), null),
+                    new TaskInfo("2", "Task 2", "Description", Instant.now(), Priority.LOW, Status.IN_PROGRESS, Set.of("label1", "label3"), null)
+            );
+            when(taskService.findAll()).thenReturn(tasks);
+            ResponseEntity<TaskListResponse> response = taskController.findAll();
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertNotNull(response.getBody().tasks(), "Task list should not be null"),
+                    () -> assertEquals(tasks, response.getBody().tasks(), "Incorrect task list returned")
             );
         }
     }

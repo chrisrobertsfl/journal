@@ -4,6 +4,7 @@ import com.chrisrobertsfl.journal.task.model.MissingTaskException;
 import com.chrisrobertsfl.journal.task.model.Task;
 import com.chrisrobertsfl.journal.task.model.TaskAggregateRoot;
 import com.chrisrobertsfl.journal.task.model.TaskInfo;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class TaskServiceImpl implements TaskService {
 
+    @Resource(name = "taskAggregateRoot")
     TaskAggregateRoot taskAggregateRoot;
 
     public TaskServiceImpl(TaskAggregateRoot taskAggregateRoot) {
