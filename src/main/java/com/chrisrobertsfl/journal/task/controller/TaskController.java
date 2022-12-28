@@ -2,10 +2,12 @@ package com.chrisrobertsfl.journal.task.controller;
 
 import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/tasks")
@@ -32,8 +34,10 @@ public class TaskController {
     public ResponseEntity<TaskResponse> updateTask(@RequestBody TaskInfo task) {
         try {
             return ResponseEntity.ok(TaskResponse.success(taskService.updateTask(task)));
-        } catch (TaskException e) {
-            return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
+        } catch (TaskNotFoundException e) {
+            return ResponseEntity.status(404).body(TaskResponse.error(e.getMessage()));
+        }  catch (MissingTaskException e) {
+            return ResponseEntity.status(400).body(TaskResponse.error(e.getMessage()));
         } catch(Exception e) {
             return ResponseEntity.internalServerError().body(TaskResponse.error(e.getMessage()));
         }
@@ -54,5 +58,9 @@ public class TaskController {
         } catch(TaskException e) {
             return ResponseEntity.badRequest().body(TaskResponse.error(e.getMessage()));
         }
+    }
+
+    public ResponseEntity<TaskListResponse> findByLabel(Set<String> labels) {
+        return  ResponseEntity.ok(TaskListResponse.success(taskService.findByLabel(labels)));
     }
 }

@@ -4,13 +4,11 @@ import com.chrisrobertsfl.journal.task.model.MissingTaskException;
 import com.chrisrobertsfl.journal.task.model.Task;
 import com.chrisrobertsfl.journal.task.model.TaskAggregateRoot;
 import com.chrisrobertsfl.journal.task.model.TaskInfo;
-import com.chrisrobertsfl.journal.task.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.chrisrobertsfl.journal.task.model.Status.valueOf;
 import static java.util.Optional.ofNullable;
@@ -22,8 +20,8 @@ public class TaskServiceImpl implements TaskService {
 
     TaskAggregateRoot taskAggregateRoot;
 
-    public TaskServiceImpl(TaskRepository taskRepository) {
-        this.taskAggregateRoot = new TaskAggregateRoot(taskRepository);
+    public TaskServiceImpl(TaskAggregateRoot taskAggregateRoot) {
+        this.taskAggregateRoot = taskAggregateRoot;
     }
 
     @Override
@@ -49,7 +47,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskInfo deleteTask(String id) {
         return taskAggregateRoot.deleteTask(ofNullable(id)
-                .orElseThrow(() -> new MissingTaskException("Task ID cannot be null")))
+                        .orElseThrow(() -> new MissingTaskException("Task ID cannot be null")))
                 .toTaskInfo();
     }
 

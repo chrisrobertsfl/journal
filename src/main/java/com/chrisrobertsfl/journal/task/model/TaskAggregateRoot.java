@@ -1,6 +1,7 @@
 package com.chrisrobertsfl.journal.task.model;
 
 import com.chrisrobertsfl.journal.task.repository.TaskRepository;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import static com.chrisrobertsfl.journal.task.model.Status.IN_PROGRESS;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
+@Component
 public class TaskAggregateRoot {
     private final TaskRepository taskRepository;
 

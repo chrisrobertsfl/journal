@@ -1,10 +1,6 @@
 package com.chrisrobertsfl.journal.task.controller;
 
-import com.chrisrobertsfl.journal.task.model.MissingTaskException;
-import com.chrisrobertsfl.journal.task.model.TaskInfo;
-import com.chrisrobertsfl.journal.task.model.TaskNotFoundException;
-import com.chrisrobertsfl.journal.task.model.TaskResponse;
-import com.chrisrobertsfl.journal.task.repository.TaskRepository;
+import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
 import com.chrisrobertsfl.journal.task.service.TaskServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -20,9 +16,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.chrisrobertsfl.journal.task.model.Priority.HIGH;
+import static com.chrisrobertsfl.journal.task.model.Status.PENDING;
+import static com.chrisrobertsfl.journal.task.model.TaskInfo.nullTaskInfo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -30,8 +32,6 @@ import static org.mockito.Mockito.when;
 @DisplayName("Given Task Controller")
 class TaskControllerTest {
 
-    @Mock
-    TaskRepository taskRepository;
     @Mock
     TaskService taskService;
 
@@ -78,35 +78,26 @@ class TaskControllerTest {
     @Nested
     @DisplayName("when updating a task")
     class UpdateTask {
-        static Stream<Arguments> provideExceptionsAndStatusCodes() {
-            return Stream.of(
-                    Arguments.of(new MissingTaskException("Task ID cannot be null"), HttpStatusCode.valueOf(400), "Task ID cannot be null", null),
-                    Arguments.of(new IllegalArgumentException("Something bad happened"), HttpStatusCode.valueOf(500), "Something bad happened", null)
-            );
-        }
 
-        @ParameterizedTest(name = "Status of {1} should be returned with message \"{2}\"")
-        @MethodSource("provideExceptionsAndStatusCodes")
-        @DisplayName("When updating an erroneous task")
-        void returnsCorrectResponseWhenExceptionIsThrown(Exception exception, HttpStatusCode code, String message, TaskInfo taskInfo) {
-            when(taskService.updateTask(null)).thenThrow(exception);
-            ResponseEntity<TaskResponse> response = taskController.updateTask(taskInfo);
+        @Test
+        @DisplayName("When updating task that whose id is null")
+        void returnsMissingTaskExceptionWhenIdIsNull() {
+            when(taskService.updateTask(nullTaskInfo())).thenThrow(new MissingTaskException("Task ID cannot be null"));
+            ResponseEntity<TaskResponse> response = taskController.updateTask(nullTaskInfo());
             assertAll(
-                    () -> assertEquals(code, response.getStatusCode(), "Incorrect status code"),
-                    () -> assertEquals(message, response.getBody().error(), "Incorrect error message")
+                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode()),
+                    () -> assertEquals("Task ID cannot be null", response.getBody().error(), "Incorrect error message")
             );
         }
 
         @Test
         @DisplayName("When updating task that is not found")
-        void returnTaskNotFoundExceptionWhenCannotFindTask() {
+        void returnsTaskNotFoundExceptionWhenCannotFindTask() {
             TaskInfo task = new TaskInfo("1", null, null, null, null, null, null, null);
-            TaskService taskService = new TaskServiceImpl(taskRepository);
-            TaskController taskController = new TaskController(taskService);
-            when(taskRepository.findById(task.id())).thenReturn(Optional.empty());
+            when(taskService.updateTask(task)).thenThrow(new TaskNotFoundException("Task with ID '1' not found"));
             ResponseEntity<TaskResponse> response = taskController.updateTask(task);
             assertAll(
-                    () -> assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode(), "Incorrect status code"),
                     () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
             );
         }
@@ -186,7 +177,29 @@ class TaskControllerTest {
                     () -> assertEquals("Task with ID '1' not found", response.getBody().error(), "Incorrect error message")
             );
         }
-
-
     }
+
+    @Nested
+    @DisplayName("when finding tasks by labels")
+            //            task = new TaskInfo(taskId, "Task 1", "Description", Instant.now(), HIGH, PENDING, Set.of("label1"), List.of());
+    class FindByLabel {
+
+        @Test
+        @DisplayName("tasks are found by labels")
+        void findByLabel() {
+            List<TaskInfo> taskList = List.of(
+                    new TaskInfo("1", "Task 1", "Description", Instant.now(), HIGH, PENDING, Set.of("label 1"), List.of()),
+                    new TaskInfo("2", "Task 2", "Description", Instant.now(), HIGH, PENDING, Set.of("label 2"), List.of())
+            );
+            Set<String> labels = Set.of("label 1", "label 2");
+            when(taskService.findByLabel(labels)).thenReturn(taskList);
+            TaskController taskController = new TaskController(taskService);
+            ResponseEntity<TaskListResponse> response = taskController.findByLabel(labels);
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals(taskList, response.getBody().tasks(), "Incorrect list of tasks")
+            );
+        }
+    }
+
 }

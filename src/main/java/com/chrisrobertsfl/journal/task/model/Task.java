@@ -10,6 +10,10 @@ import static java.util.stream.Collectors.toList;
 
 public record Task(String id, String name, String description, Instant createdAt, Priority priority,
                    Status status, Set<String> labels, List<Task> subtasks) {
+    public static Task nullTask() {
+        return new Task(null, null, null, null, null, null, null, null);
+    }
+
     public TaskInfo toTaskInfo() {
         List<TaskInfo> subTasks = ofNullable(subtasks)
                 .map(t -> t.stream()
