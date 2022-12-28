@@ -25,7 +25,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskInfo create(TaskInfo taskInfo) {
-        System.out.println("taskInfo = " + taskInfo);
         TaskInfo saved = engine
                 .insert(taskInfo)
                 .insert(itemRepository)

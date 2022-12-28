@@ -44,7 +44,6 @@ public class TaskServiceImplTest {
                 NOT_STARTED,
                 Set.of("label 1", "label 2")));
         TaskInfo saved = service.create(new TaskInfo(null, "Get some food", "Food is from publix", null, Set.of("label 1", "label 2")));
-        System.out.println("saved = " + saved);
         assertAll(
                 () -> assertEquals(NOT_STARTED, saved.state(), "state should be not started"),
                 () -> assertEquals("Get some food", saved.name(), "name is different"),

@@ -32,9 +32,9 @@ public class TaskAggregateRoot {
     public Task updateTask(Task task) {
         ofNullable(task)
                 .orElseThrow(() -> new MissingTaskException("Task is missing"));
-        return taskRepository.findById(task.id())
-                .map(taskRepository::save)
-                .orElseThrow(() -> new TaskNotFoundException(format("Task with ID '%s' not found", task.id())));
+        findById(task.id())
+                .orElseThrow(() -> new TaskNotFoundException(format("No Task found for id %s", task.id())));
+        return taskRepository.save(task);
     }
 
     public Task deleteTask(String id) {

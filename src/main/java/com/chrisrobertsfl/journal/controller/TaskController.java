@@ -19,7 +19,6 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<TaskInfo> createTask(@RequestBody TaskInfo taskInfo) {
-        System.out.println("taskInfo = " + taskInfo);
         TaskInfo created = taskService.create(taskInfo);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
