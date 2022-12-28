@@ -2,7 +2,6 @@ package com.chrisrobertsfl.journal.task.controller;
 
 import com.chrisrobertsfl.journal.task.model.*;
 import com.chrisrobertsfl.journal.task.service.TaskService;
-import com.chrisrobertsfl.journal.task.service.TaskServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +24,8 @@ import java.util.stream.Stream;
 import static com.chrisrobertsfl.journal.task.model.Priority.HIGH;
 import static com.chrisrobertsfl.journal.task.model.Status.PENDING;
 import static com.chrisrobertsfl.journal.task.model.TaskInfo.nullTaskInfo;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -181,7 +182,6 @@ class TaskControllerTest {
 
     @Nested
     @DisplayName("when finding tasks by labels")
-            //            task = new TaskInfo(taskId, "Task 1", "Description", Instant.now(), HIGH, PENDING, Set.of("label1"), List.of());
     class FindByLabel {
 
         @Test
@@ -199,6 +199,31 @@ class TaskControllerTest {
                     () -> assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode(), "Incorrect status code"),
                     () -> assertEquals(taskList, response.getBody().tasks(), "Incorrect list of tasks")
             );
+        }
+
+        @Test
+        @DisplayName("tasks are not found by labels")
+        void findByLabelNotFound() {
+            Set<String> labels = Set.of("label 1", "label 2");
+            when(taskService.findByLabel(labels)).thenReturn(List.of());
+            ResponseEntity<TaskListResponse> response = taskController.findByLabel(labels);
+
+            assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode(), "Incorrect status code"),
+                    () -> assertEquals("No tasks found for label(s):  [label 1, label 2]", response.getBody().error(), "Expected no task list in the response")
+            );
+        }
+
+        @Test
+        @DisplayName("labels are null is a bad request")
+        void findbyNullLabels() {
+            assertEquals(HttpStatusCode.valueOf(400), taskController.findByLabel(null).getStatusCode(), "Incorrect status code");
+        }
+
+        @Test
+        @DisplayName("labels are empty is a bad request")
+        void findbyEmptyLabels() {
+            assertEquals(HttpStatusCode.valueOf(400), taskController.findByLabel(emptySet()).getStatusCode(), "Incorrect status code");
         }
     }
 
