@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
@@ -58,6 +59,7 @@ class TaskControllerTest {
             ResponseEntity<TaskResponse> response = taskController.addTask(task);
 
             assertAll(
+                    () -> assertEquals(HttpStatusCode.valueOf(201),  response.getStatusCode(), "Incorrect status code"),
                     () -> assertNotNull(response.getBody().task(), "Task response body should not be null"),
                     () -> assertEquals(task, response.getBody().task(), "Incorrect task in response body")
             );
