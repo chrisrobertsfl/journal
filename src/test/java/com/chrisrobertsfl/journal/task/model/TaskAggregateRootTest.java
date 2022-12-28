@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Task Aggregate Root")
+@DisplayName("Given Task Aggregate Root")
 public class TaskAggregateRootTest {
     @Mock
     TaskRepository taskRepository;

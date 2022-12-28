@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Test Service")
+@DisplayName("Given Task Service Implementation")
 public class TaskServiceImplTest {
     TaskService taskService;
     @Mock
